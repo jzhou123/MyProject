@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<!--
+*The Git repository is at https://github.com/jzhou123/MyProject.git
+*The application contains only one file currency-converter.html.
+*Try to open the html file to a browser. The supported browser is Chrome.
+*The rate is retrieved from http://api.fixer.io/latest at the runtime.
+*An error will display when failed to connect to the rate site.
+  -->
+<html>
+<head>
+<meta charset="ISO-8859-1">
+<title>Phone Book</title>
+</head>
+<style>
+.header {
+	color: black;
+	font-family: arial;
+	font-size: 110%;
+}
+
+.menuetext {
+	color: black;
+	font-family: courier;
+	font-size: 80%;
+	padding: 1%;
+}
+
+.link {
+	color: blue;
+	font-family: arial;
+	font-size: 90%;
+	float: right;
+}
+.errortext {
+	color: red;
+	font-family: arial;
+	font-size: 90%;
+	float: left;
+	display: none;
+}
+
+.textiput {
+	float: left;
+}
+
+.selectinput {
+	background-color: lightgrey;
+	float: right;
+}
+
+.rowcontent {
+	width: 50% inherit;
+}
+
+.page-wrap {
+	margin: 5% auto;
+	padding: 5%;
+	padding-top: 3%;
+	width: 20%;
+	background-color: #FFF0F5;
+	border: 1px solid black;
+	float: center;
+}
+</style>
+<script>
+	var mockupdata = '{"base":"EUR","date":"2017-07-21","rates":{"AUD":1.4699,"BGN":1.9558,"BRL":3.6225,"CAD":1.4664,"CHF":1.1051,"CNY":7.8798,"CZK":26.017,"DKK":7.4368,"GBP":0.8961,"HKD":9.0902,"HRK":7.411,"HUF":305.37,"IDR":15498.0,"ILS":4.1483,"INR":74.904,"JPY":129.72,"KRW":1302.3,"MXN":20.376,"MYR":4.9869,"NOK":9.3315,"NZD":1.565,"PHP":59.026,"PLN":4.2364,"RON":4.5703,"RUB":68.618,"SEK":9.6193,"SGD":1.5872,"THB":38.942,"TRY":4.1138,"USD":1.1642,"ZAR":15.058}}';
+	var url = 'http://api.fixer.io/latest';
+	function toFixed(num){
+		num = num * 1.0;
+		if(num == 0){
+			return num;
+		}else{
+				return num.toFixed(5) * 1.00000;
+		}
+	}
+	
+	function getJSON(theUrl, callback)
+	{
+		 var xmlHttp = new XMLHttpRequest();
+      
+	    xmlHttp.onreadystatechange = function() { 
+	        if (xmlHttp.readyState == 4 && xmlHttp.status == 200){
+	        	
+	        	document.getElementById("errorid").style.display='none';
+	            callback(xmlHttp.responseText);
+	        }else{
+	        	document.getElementById("errorid").style.display='block';
+	        	callback(mockupdata);
+	        }
+	    }
+	    xmlHttp.open("GET", theUrl, true); // true for asynchronous 
+	    xmlHttp.send();
+	}
+	function loadRate(){
+		getJSON(url, function(text){document.getElementById("jsonobj").value = text; });
+	}
+	function calculateRate(){
+		ratetext = document.getElementById("jsonobj").value;
+		rateobj = JSON.parse(ratetext);
+		
+		amount1 = document.getElementById("amount1").value;
+		
+		var currency1 = document.getElementById("currency1");
+		var currency2 = document.getElementById("currency2");
+		currency1value = currency1[currency1.selectedIndex].text;
+		currency2value = currency2[currency2.selectedIndex].text;
+		
+		rate_base = rateobj.base;
+		rate = 0.0;
+		if(rate_base == 'EUR'){
+			if(currency1value == 'EUR'){
+				if(currency2value == 'EUR'){
+					rate = 1;
+				}
+				if(currency2value == 'CAD'){
+					rates = rateobj.rates;
+					rate = rates.CAD;
+				}
+				if(currency2value == 'USD'){
+					rates = rateobj.rates;
+					rate = rates.USD;
+				}
+				document.getElementById("amount2").value = toFixed(amount1*rate);
+			}
+			
+			if(currency1value == 'CAD'){
+				if(currency2value == 'CAD'){
+					rate = 1;
+				}
+				if(currency2value == 'EUR'){
+					rates = rateobj.rates;
+					rate = (1/rates.CAD);
+				}
+				if(currency2value == 'USD'){
+					rates = rateobj.rates;
+					rate = (1/rates.CAD) * rates.USD;
+				}
+				document.getElementById("amount2").value = toFixed(amount1*rate);
+			}
+			
+			if(currency1value == 'USD'){
+				if(currency2value == 'USD'){
+					rate = 1;
+				}
+				if(currency2value == 'EUR'){
+					rates = rateobj.rates;
+					rate = (1/rates.USD);
+				}
+				if(currency2value == 'CAD'){
+					rates = rateobj.rates;
+					rate = (1/rates.USD) * rates.CAD;
+				}
+				document.getElementById("amount2").value = toFixed(amount1*rate);
+			}
+			
+		}
+		
+	}
+	function onClickAmmount(){
+		document.getElementById("amount1").value = '';
+	}
+	
+	function onEnterAmmount(){
+		
+		if(document.getElementById("jsonobj").value == ''){
+			loadRate();
+		}
+		calculateRate();
+		
+		
+	}
+    function onCurrency1Change(){
+    	if(document.getElementById("jsonobj").value == ''){
+			loadRate();
+		}
+    	calculateRate();
+	}
+    function onCurrency2Change(){
+    	if(document.getElementById("jsonobj").value == ''){
+			loadRate();
+		}
+    	calculateRate();
+	}
+    function onClickLink(){	
+			loadRate();
+	
+	}
+	
+
+</script>
+
+<body>
+
+	<form id="myform">
+		<input type="hidden" id="jsonobj" name="jsonname">
+		<div class="page-wrap">
+
+			<div class="header">Currency Converter</div>
+			<div class="menuetext">Type in amount and select currency:</div>
+			<div class="rowcontent">
+				<input type="number" id="amount1" class="textinput" value=0
+					oninput="onEnterAmmount()" onclick="onClickAmmount()"> <select id="currency1"
+					class="selectinput" onchange="onCurrency1Change()">
+					<option value="CAD">CAD</option>
+					<option value="saab">EUR</option>
+					<option value="mercedes">USD</option>
+				</select>
+			</div>
+
+			<div class="menuetext">Converted amount:</div>
+			<div class="rowcontent">
+				<input type="number" id="amount2" class="textinput" value=0 disabled>
+				<select id="currency2" class="selectinput"
+					onchange="onCurrency2Change()">
+					<option value="CAD">CAD</option>
+					<option value="saab">EUR</option>
+					<option value="mercedes">USD</option>
+				</select>
+			</div>
+			<div class="link">
+				<a href="#" onclick="onClickLink()">Disclaimer</a>
+			</div>
+
+			<div class="errortext" id="errorid">
+				Failed to connect to Server. Converter now is based on the mock-up data. The supported browser is Chrome. 
+			</div>
+
+		</div>
+
+	</form>
+</body>
+</html>
